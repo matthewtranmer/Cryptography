@@ -108,9 +108,9 @@ namespace Cryptography
             return shortened_hash;
         }
 
-        public (string signature, Coordinate public_key) generateDSAsignature(string data)
+        public (string signature, Coordinate public_key) generateDSAsignature(string data, BigInteger private_key)
         {
-            KeyPair key_pair = new KeyPair(curve);
+            KeyPair key_pair = new KeyPair(curve, private_key);
 
             BigInteger order = key_pair.getOrder();
             string hash = generateHash(data);
