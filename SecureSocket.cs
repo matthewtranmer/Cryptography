@@ -12,7 +12,6 @@ namespace Cryptography
     public class SecureSocket : IDisposable
     {
         private Socket socket;
-        private const int header_buffer = 16384;
 
         //System.Buffer
 
@@ -74,15 +73,16 @@ namespace Cryptography
         private Span<byte> AESdecrypt(Span<byte> ciphertext, string key)
         {
             SymmetricAlgorithm symmetric_algorithm = createEncryptionObj(key);
+            MemoryStream output_stream = new MemoryStream();
 
-            using MemoryStream memory_stream = new MemoryStream(ciphertext.ToArray());
-            using (CryptoStream crypto_stream = new CryptoStream(memory_stream, symmetric_algorithm.CreateDecryptor(), CryptoStreamMode.Read))
+            using (MemoryStream memory_stream = new MemoryStream(ciphertext.ToArray()))
             {
-                Span<byte> plaintext = new byte[ciphertext.Length];
-                crypto_stream.Read(plaintext);
-
-                return plaintext;
+                using (CryptoStream crypto_stream = new CryptoStream(memory_stream, symmetric_algorithm.CreateDecryptor(), CryptoStreamMode.Read))
+                {
+                    crypto_stream.CopyTo(output_stream);
+                }
             }
+            return output_stream.ToArray();
         }
 
         private Span<byte> generatePayload(Coordinate public_key)
@@ -155,7 +155,7 @@ namespace Cryptography
             return data_recieved;
         }
 
-        private void sendArbitrary(Span<byte> data)
+        public void sendArbitrary(Span<byte> data)
         {
             using (BinaryWriter stream = new BinaryWriter(new NetworkStream(socket)))
             {
@@ -164,7 +164,7 @@ namespace Cryptography
             }
         }
 
-        private Span<byte> recvArbitrary()
+        public Span<byte> recvArbitrary()
         {
             using (BinaryReader stream = new BinaryReader(new NetworkStream(socket)))
             {
@@ -175,9 +175,9 @@ namespace Cryptography
         public void secureSend(Span<byte> data)
         {
             string encryption_key = sendHandshake();
-            Span<byte> encrpted_data = AESencrypt(data, encryption_key);
+            Span<byte> encrypted_data = AESencrypt(data, encryption_key);
 
-            sendArbitrary(encrpted_data);
+            sendArbitrary(encrypted_data);
         }
 
         public Span<byte> secureRecv()
