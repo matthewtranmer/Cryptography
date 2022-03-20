@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Numerics;
 using System.Text;
 using System.Security.Cryptography;
@@ -108,7 +108,18 @@ namespace Cryptography
             return shortened_hash;
         }
 
-        public (string signature, Coordinate public_key) generateDSAsignature(string data, BigInteger private_key)
+        private string coordinateToString(Coordinate coord){
+            return $"{coord.x},{coord.y}";
+        }
+
+        private Coordinate stringToCoordinate(string str_coord){
+            string[] split_string = str_coord.Split(',', 2);
+
+            Coordinate coordinate = new Coordinate(BigInteger.Parse(split_string[0]), BigInteger.Parse(split_string[1]));
+            return coordinate;
+        }
+
+        public (string signature, string public_key) generateDSAsignature(string data, BigInteger private_key)
         {
             KeyPair key_pair = new KeyPair(curve, private_key);
 
@@ -137,10 +148,13 @@ namespace Cryptography
             }
 
             string signature = $"{r}:{s}";
-            return (signature, key_pair.public_component);
+            string public_key = coordinateToString(key_pair.public_component);
+            return (signature, public_key);
         }
-        public bool verifyDSAsignature(string data, string signature, Coordinate public_key)
+        public bool verifyDSAsignature(string data, string signature, string public_key_str)
         {
+            Coordinate public_key = stringToCoordinate(public_key_str);
+
             ECPoint public_point = new ECPoint(curve);
             public_point.changePoint(public_key);
 
