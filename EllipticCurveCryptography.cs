@@ -4,7 +4,7 @@ using System.Text;
 using System.Security.Cryptography;
 using System.Globalization;
 
-namespace Cryptography
+namespace Cryptography.EllipticCurveCryptography
 {
     public class ECC
     {
@@ -109,13 +109,24 @@ namespace Cryptography
         }
 
         private string coordinateToString(Coordinate coord){
+<<<<<<< HEAD:EllipticCurveCryptography.cs
+            return $"{coord.x.ToString("x")},{coord.y.ToString("x")}";
+=======
             return $"{coord.x},{coord.y}";
+>>>>>>> 5b190541820948fbbf3183ed24c6583d20dd829b:ECC.cs
         }
 
         private Coordinate stringToCoordinate(string str_coord){
             string[] split_string = str_coord.Split(',', 2);
 
+<<<<<<< HEAD:EllipticCurveCryptography.cs
+            Coordinate coordinate = new Coordinate(
+                BigInteger.Parse(split_string[0], NumberStyles.AllowHexSpecifier),
+                BigInteger.Parse(split_string[1], NumberStyles.AllowHexSpecifier)
+            );
+=======
             Coordinate coordinate = new Coordinate(BigInteger.Parse(split_string[0]), BigInteger.Parse(split_string[1]));
+>>>>>>> 5b190541820948fbbf3183ed24c6583d20dd829b:ECC.cs
             return coordinate;
         }
 
@@ -147,7 +158,11 @@ namespace Cryptography
                 s = MathBI.mod(s, order);
             }
 
+<<<<<<< HEAD:EllipticCurveCryptography.cs
+            string signature = $"{r.ToString("x")}:{s.ToString("x")}";
+=======
             string signature = $"{r}:{s}";
+>>>>>>> 5b190541820948fbbf3183ed24c6583d20dd829b:ECC.cs
             string public_key = coordinateToString(key_pair.public_component);
             return (signature, public_key);
         }
@@ -173,8 +188,8 @@ namespace Cryptography
             BigInteger int_hash = convertHash(hash, order);
 
             string[] split_signature = signature.Split(':');
-            BigInteger r = BigInteger.Parse(split_signature[0]);
-            BigInteger s = BigInteger.Parse(split_signature[1]);
+            BigInteger r = BigInteger.Parse(split_signature[0], NumberStyles.AllowHexSpecifier);
+            BigInteger s = BigInteger.Parse(split_signature[1], NumberStyles.AllowHexSpecifier);
 
             if (r > order || r < 1)
             {
