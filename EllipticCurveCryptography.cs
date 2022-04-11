@@ -109,24 +109,16 @@ namespace Cryptography.EllipticCurveCryptography
         }
 
         private string coordinateToString(Coordinate coord){
-<<<<<<< HEAD:EllipticCurveCryptography.cs
             return $"{coord.x.ToString("x")},{coord.y.ToString("x")}";
-=======
-            return $"{coord.x},{coord.y}";
->>>>>>> 5b190541820948fbbf3183ed24c6583d20dd829b:ECC.cs
         }
 
         private Coordinate stringToCoordinate(string str_coord){
             string[] split_string = str_coord.Split(',', 2);
 
-<<<<<<< HEAD:EllipticCurveCryptography.cs
             Coordinate coordinate = new Coordinate(
                 BigInteger.Parse(split_string[0], NumberStyles.AllowHexSpecifier),
                 BigInteger.Parse(split_string[1], NumberStyles.AllowHexSpecifier)
             );
-=======
-            Coordinate coordinate = new Coordinate(BigInteger.Parse(split_string[0]), BigInteger.Parse(split_string[1]));
->>>>>>> 5b190541820948fbbf3183ed24c6583d20dd829b:ECC.cs
             return coordinate;
         }
 
@@ -158,14 +150,11 @@ namespace Cryptography.EllipticCurveCryptography
                 s = MathBI.mod(s, order);
             }
 
-<<<<<<< HEAD:EllipticCurveCryptography.cs
             string signature = $"{r.ToString("x")}:{s.ToString("x")}";
-=======
-            string signature = $"{r}:{s}";
->>>>>>> 5b190541820948fbbf3183ed24c6583d20dd829b:ECC.cs
             string public_key = coordinateToString(key_pair.public_component);
             return (signature, public_key);
         }
+
         public bool verifyDSAsignature(string data, string signature, string public_key_str)
         {
             Coordinate public_key = stringToCoordinate(public_key_str);
