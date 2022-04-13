@@ -1,7 +1,5 @@
 using System;
 using System.Numerics;
-using System.Text;
-using System.Security.Cryptography;
 using System.Globalization;
 
 namespace Cryptography.EllipticCurveCryptography
@@ -30,15 +28,6 @@ namespace Cryptography.EllipticCurveCryptography
             number = (number + 1) % (max - min + 1) + min;
 
             return number;
-        }
-
-        private string generateHash(string data)
-        {
-            using SHA256 sha256Hash = SHA256.Create();
-            byte[] data_bytes = Encoding.UTF8.GetBytes(data);
-            byte[] hash_bytes = sha256Hash.ComputeHash(data_bytes);
-
-            return BitConverter.ToString(hash_bytes).Replace("-", String.Empty);
         }
 
         private string KDF(string data, int key_length)
@@ -102,10 +91,20 @@ namespace Cryptography.EllipticCurveCryptography
             string hash_binary = uintToBinary(int_hash);
             int binary_hash_length = Convert.ToInt32(Math.Floor(BigInteger.Log(order, 2) + 1));
 
-            string shortened_binary = hash_binary.Substring(0, binary_hash_length);
-            BigInteger shortened_hash = ubinaryToInt(shortened_binary);
+            //Pad bits if longer
+            if (binary_hash_length > hash_binary.Length)
+            {
+                int difference = binary_hash_length - hash_binary.Length;
+                for (int i=0; i < difference; i++)
+                {
+                    hash_binary += 0;
+                }
 
-            return shortened_hash;
+                return ubinaryToInt(hash_binary);
+            }
+
+            string shortened_binary = hash_binary.Substring(0, binary_hash_length);
+            return ubinaryToInt(shortened_binary);
         }
 
         private string coordinateToString(Coordinate coord){
@@ -127,7 +126,7 @@ namespace Cryptography.EllipticCurveCryptography
             KeyPair key_pair = new KeyPair(curve, private_key);
 
             BigInteger order = key_pair.getOrder();
-            string hash = generateHash(data);
+            string hash = Hash.generateHash(data);
             BigInteger int_hash = convertHash(hash, order);
 
             BigInteger ephemeral_key = 0;
@@ -173,7 +172,7 @@ namespace Cryptography.EllipticCurveCryptography
             }
 
             BigInteger order = ECPoint.pre_defined_curves[curve].order;
-            string hash = generateHash(data);
+            string hash = Hash.generateHash(data);
             BigInteger int_hash = convertHash(hash, order);
 
             string[] split_signature = signature.Split(':');
