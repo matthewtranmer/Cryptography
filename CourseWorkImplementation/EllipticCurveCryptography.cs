@@ -43,7 +43,7 @@ namespace Cryptography.EllipticCurveCryptography
 
         private string KDF(string data, int key_length)
         {
-            return generateHash(data).Substring(0, key_length);
+            return Hash.generateHash(data).Substring(0, key_length);
         }
 
         //Generate a shared secret with a private component and a public elliptic curve point
