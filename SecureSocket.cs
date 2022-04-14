@@ -19,6 +19,7 @@ namespace Cryptography.Networking
         MemoryPool<byte> mem_pool;
 
         private const int key_size = 128;
+        //Testing Only
         private byte[] initialization_vector = new byte[] { 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97 };
 
         //public key components
