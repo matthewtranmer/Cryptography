@@ -8,7 +8,7 @@ using System.Buffers;
 using System.Linq;
 using Cryptography.EllipticCurveCryptography;
 
-namespace Cryptography.Netwprking
+namespace Cryptography.Networking
 {
     public class SecureSocket : IDisposable
     {
