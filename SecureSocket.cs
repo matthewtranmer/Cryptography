@@ -142,7 +142,15 @@ namespace Cryptography.Networking
 
         private int sendRaw(Span<byte> data)
         {
-            return socket.Send(data);
+            IAsyncResult result = socket.BeginSend(data.ToArray(), 0, data.Length, SocketFlags.None, null, null);
+            result.AsyncWaitHandle.WaitOne(socket.SendTimeout, true);
+            
+            if (!result.IsCompleted)
+            {
+                throw new TimeoutException("Connection timed out when trying to send data");
+            }
+
+            return socket.EndSend(result);
         }
 
         private Span<byte> recvRaw(int buffsize)
@@ -150,7 +158,9 @@ namespace Cryptography.Networking
             Span<byte> data_recieved;
             using (IMemoryOwner<byte> buffer = mem_pool.Rent(buffsize))
             {
+                //Console.WriteLine("stops here - recvraw");
                 int bytes_received = socket.Receive(buffer.Memory.Span);
+
                 data_recieved = buffer.Memory.Span.Slice(0, bytes_received);
             }
 
@@ -159,6 +169,7 @@ namespace Cryptography.Networking
 
         public void sendArbitrary(Span<byte> data)
         {
+            //Console.WriteLine("stops here - send arb");
             using (BinaryWriter stream = new BinaryWriter(new NetworkStream(socket)))
             {
                 stream.Write(data.Length);
@@ -168,8 +179,12 @@ namespace Cryptography.Networking
 
         public Span<byte> recvArbitrary()
         {
-            using (BinaryReader stream = new BinaryReader(new NetworkStream(socket)))
+            using NetworkStream ns = new NetworkStream(socket);
+
+            using (BinaryReader stream = new BinaryReader(ns))
             {
+                //Also may stop here
+                //Console.WriteLine("stops here - recv arb");
                 int content_length = stream.ReadInt32();
                 return recvRaw(content_length);
             }
