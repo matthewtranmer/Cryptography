@@ -107,7 +107,16 @@ namespace Cryptography.EllipticCurveCryptography
             return ubinaryToInt(shortened_binary);
         }
 
-        private string coordinateToString(Coordinate coord){
+        //Display ECC public key from a private key 
+        static internal void generatePublicKey(BigInteger private_key, Curves curve)
+        {
+            KeyPair kp = new KeyPair(curve, private_key);
+
+            string public_key = coordinateToString(kp.public_component);
+            Console.WriteLine(public_key);
+        }
+
+        private static string coordinateToString(Coordinate coord){
             return $"{coord.x.ToString("x")},{coord.y.ToString("x")}";
         }
 

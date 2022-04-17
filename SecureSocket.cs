@@ -1,30 +1,27 @@
-﻿using System;
-using System.Net.Sockets;
+﻿using System.Net.Sockets;
 using System.Text;
 using System.Numerics;
 using System.Security.Cryptography;
-using System.IO;
 using System.Buffers;
-using System.Linq;
 using Cryptography.EllipticCurveCryptography;
 
 namespace Cryptography.Networking
 {
+    public class SignatureInvalidExeption : Exception
+    {
+        public SignatureInvalidExeption() : base("The signature was invalid! Possible man in the middile attack") { }
+    }
+
     public class SecureSocket : IDisposable
     {
         private Socket socket;
-
-        //System.Buffer
-
-        MemoryPool<byte> mem_pool;
+        private MemoryPool<byte> mem_pool;
 
         private const int key_size = 128;
         //Testing Only
         private byte[] initialization_vector = new byte[] { 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97 };
 
-        //public key components
         private const int pub_key_bytes = 32;
-
         private Curves default_curve = Curves.microsoft_160;
 
         public SecureSocket(Socket socket)
@@ -139,6 +136,44 @@ namespace Cryptography.Networking
             return key;
         }
 
+        private string sendHandshakeSigned(BigInteger signature_private_key)
+        {
+            KeyPair key_pair = new KeyPair(default_curve);
+            ECC ecc = new ECC(default_curve);
+
+            Span<byte> payload = generatePayload(key_pair.public_component);
+            sendRaw(payload);
+
+            string signature = ecc.generateDSAsignature(Encoding.UTF8.GetString(payload), signature_private_key).signature;
+            sendArbitrary(Encoding.UTF8.GetBytes(signature));
+
+            Coordinate public_key = decodePayload(recvRaw(pub_key_bytes * 2));
+            string key = ecc.ECDH(key_pair.private_component, public_key);
+
+            return key;
+        }
+
+        private string recvHandshakeSigned(string signature_public_key)
+        {
+            KeyPair key_pair = new KeyPair(default_curve);
+            ECC ecc = new ECC(default_curve);
+
+            Span<byte> payload = recvRaw(pub_key_bytes * 2);
+            
+            string signature = Encoding.UTF8.GetString(recvArbitrary());
+            if (ecc.verifyDSAsignature(Encoding.UTF8.GetString(payload), signature, signature_public_key))
+            {
+                throw new SignatureInvalidExeption();
+            }
+
+            Coordinate public_key = decodePayload(payload);
+            string key = ecc.ECDH(key_pair.private_component, public_key);
+
+            payload = generatePayload(key_pair.public_component);
+            sendRaw(payload);
+
+            return key;
+        }
 
         private int sendRaw(Span<byte> data)
         {
@@ -158,7 +193,6 @@ namespace Cryptography.Networking
             Span<byte> data_recieved;
             using (IMemoryOwner<byte> buffer = mem_pool.Rent(buffsize))
             {
-                //Console.WriteLine("stops here - recvraw");
                 int bytes_received = socket.Receive(buffer.Memory.Span);
 
                 data_recieved = buffer.Memory.Span.Slice(0, bytes_received);
@@ -169,7 +203,6 @@ namespace Cryptography.Networking
 
         public void sendArbitrary(Span<byte> data)
         {
-            //Console.WriteLine("stops here - send arb");
             using (BinaryWriter stream = new BinaryWriter(new NetworkStream(socket)))
             {
                 stream.Write(data.Length);
@@ -183,8 +216,6 @@ namespace Cryptography.Networking
 
             using (BinaryReader stream = new BinaryReader(ns))
             {
-                //Also may stop here
-                //Console.WriteLine("stops here - recv arb");
                 int content_length = stream.ReadInt32();
                 return recvRaw(content_length);
             }
@@ -206,5 +237,21 @@ namespace Cryptography.Networking
             return decrypted_data;
         }
 
+        public void secureSendSigned(BigInteger private_key, Span<byte> data)
+        {
+            string encryption_key = sendHandshakeSigned(private_key);
+            Span<byte> encrypted_data = AESencrypt(data, encryption_key);
+
+            sendArbitrary(encrypted_data);
+        }
+
+        public Span<byte> secureRecvSigned(string public_key)
+        {
+            string encryption_key = recvHandshakeSigned(public_key);
+            Span<byte> encrypted_data = recvArbitrary();
+
+            Span<byte> decrypted_data = AESdecrypt(encrypted_data, encryption_key);
+            return decrypted_data;
+        }
     }
 }
