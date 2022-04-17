@@ -161,7 +161,7 @@ namespace Cryptography.Networking
             Span<byte> payload = recvRaw(pub_key_bytes * 2);
             
             string signature = Encoding.UTF8.GetString(recvArbitrary());
-            if (ecc.verifyDSAsignature(Encoding.UTF8.GetString(payload), signature, signature_public_key))
+            if (!ecc.verifyDSAsignature(Encoding.UTF8.GetString(payload), signature, signature_public_key))
             {
                 throw new SignatureInvalidExeption();
             }
