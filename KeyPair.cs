@@ -12,6 +12,8 @@ namespace Cryptography
         public BigInteger private_component { get { return private_key; } }
         public Coordinate public_component { get { return getCoords(); } }
 
+        public string public_component_string { get { return ECC.coordinateToString(getCoords()); } }
+
         public KeyPair(Curves curve) : base(curve)
         {
             used_curve = curve;

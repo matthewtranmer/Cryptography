@@ -220,6 +220,7 @@ namespace Cryptography.Networking
                 return recvRaw(content_length);
             }
         }
+
         public void secureSend(Span<byte> data)
         {
             string encryption_key = sendHandshake();

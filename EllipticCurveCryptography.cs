@@ -116,7 +116,7 @@ namespace Cryptography.EllipticCurveCryptography
             Console.WriteLine(public_key);
         }
 
-        private static string coordinateToString(Coordinate coord){
+        public static string coordinateToString(Coordinate coord){
             return $"{coord.x.ToString("x")},{coord.y.ToString("x")}";
         }
 
