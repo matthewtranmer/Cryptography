@@ -2,7 +2,7 @@
 using System.Numerics;
 using System.Globalization;
 
-namespace Cryptography
+namespace Cryptography.Generic
 {
     public struct Curve
     {

@@ -2,7 +2,7 @@ using System;
 using System.Text;
 using System.Collections.Generic;
 
-namespace Cryptography
+namespace Cryptography.Generic
 {
     //My implementation of a Merkle-Damgard construction based hash function
     //That produces a 128 bit hash represented by a 32 digit hex string
@@ -23,7 +23,7 @@ namespace Cryptography
         }
 
         //split data into 512 bit blocks and add padding if necessary
-        public static byte[,] generateBlocks(string data){
+        static byte[,] generateBlocks(string data){
             int block_size = 64;
 
             byte[] bytes = Encoding.UTF8.GetBytes(data);

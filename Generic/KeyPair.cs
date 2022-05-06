@@ -1,7 +1,6 @@
 ﻿using System.Numerics;
-using Cryptography.EllipticCurveCryptography;
 
-namespace Cryptography
+namespace Cryptography.Generic
 {
     public class KeyPair : ECPoint
     {

@@ -3,13 +3,13 @@ using System.Text;
 using System.Numerics;
 using System.Security.Cryptography;
 using System.Buffers;
-using Cryptography.EllipticCurveCryptography;
+using Cryptography.Generic;
 
 namespace Cryptography.Networking
 {
     public class SignatureInvalidExeption : Exception
     {
-        public SignatureInvalidExeption() : base("The signature was invalid! Possible man in the middile attack") { }
+        public SignatureInvalidExeption() : base("The signature was invalid! Possible man in the middle attack") { }
     }
 
     public class SecureSocket : IDisposable
@@ -17,12 +17,10 @@ namespace Cryptography.Networking
         private Socket socket;
         private MemoryPool<byte> mem_pool;
 
-        private const int key_size = 128;
-        //Testing Only
-        private byte[] initialization_vector = new byte[] { 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97 };
-
         private const int pub_key_bytes = 32;
         private Curves default_curve = Curves.microsoft_160;
+
+        private Encryption encryption = new Encryption();
 
         public SecureSocket(Socket socket)
         {
@@ -44,46 +42,6 @@ namespace Cryptography.Networking
         {
             Dispose();
         }
-
-        private SymmetricAlgorithm createEncryptionObj(string key)
-        {
-            SymmetricAlgorithm algorithm = Aes.Create();
-            algorithm.BlockSize = key_size;
-            algorithm.Key = Encoding.UTF8.GetBytes(key);
-            algorithm.IV = initialization_vector;
-
-            return algorithm;
-        }
-
-        private Span<byte> AESencrypt(Span<byte> data, string key)
-        {
-            SymmetricAlgorithm symmetric_algorithm = createEncryptionObj(key);
-
-            using (MemoryStream memory_stream = new MemoryStream())
-            {
-                using (CryptoStream crypto_stream = new CryptoStream(memory_stream, symmetric_algorithm.CreateEncryptor(), CryptoStreamMode.Write))
-                {
-                    crypto_stream.Write(data);
-                }
-                return memory_stream.ToArray();
-            }
-        }
-
-        private Span<byte> AESdecrypt(Span<byte> ciphertext, string key)
-        {
-            SymmetricAlgorithm symmetric_algorithm = createEncryptionObj(key);
-            MemoryStream output_stream = new MemoryStream();
-
-            using (MemoryStream memory_stream = new MemoryStream(ciphertext.ToArray()))
-            {
-                using (CryptoStream crypto_stream = new CryptoStream(memory_stream, symmetric_algorithm.CreateDecryptor(), CryptoStreamMode.Read))
-                {
-                    crypto_stream.CopyTo(output_stream);
-                }
-            }
-            return output_stream.ToArray();
-        }
-
         private Span<byte> generatePayload(Coordinate public_key)
         {
             Span<byte> x = public_key.x.ToByteArray();
@@ -223,35 +181,43 @@ namespace Cryptography.Networking
 
         public void secureSend(Span<byte> data)
         {
-            string encryption_key = sendHandshake();
-            Span<byte> encrypted_data = AESencrypt(data, encryption_key);
+            encryption.RandomizeInitializationVector();
 
+            string encryption_key = sendHandshake();
+            Span<byte> encrypted_data = encryption.AESencrypt(data, encryption_key);
+
+            sendArbitrary(encryption.initialization_vector);
             sendArbitrary(encrypted_data);
         }
 
         public Span<byte> secureRecv()
         {
             string encryption_key = recvHandshake();
+            encryption.initialization_vector = recvArbitrary().ToArray();
             Span<byte> encrypted_data = recvArbitrary();
 
-            Span<byte> decrypted_data = AESdecrypt(encrypted_data, encryption_key);
+            Span<byte> decrypted_data = encryption.AESdecrypt(encrypted_data, encryption_key);
             return decrypted_data;
         }
 
         public void secureSendSigned(BigInteger private_key, Span<byte> data)
         {
-            string encryption_key = sendHandshakeSigned(private_key);
-            Span<byte> encrypted_data = AESencrypt(data, encryption_key);
+            encryption.RandomizeInitializationVector();
 
+            string encryption_key = sendHandshakeSigned(private_key);
+            Span<byte> encrypted_data = encryption.AESencrypt(data, encryption_key);
+
+            sendArbitrary(encryption.initialization_vector);
             sendArbitrary(encrypted_data);
         }
 
         public Span<byte> secureRecvSigned(string public_key)
         {
             string encryption_key = recvHandshakeSigned(public_key);
+            encryption.initialization_vector = recvArbitrary().ToArray();
             Span<byte> encrypted_data = recvArbitrary();
 
-            Span<byte> decrypted_data = AESdecrypt(encrypted_data, encryption_key);
+            Span<byte> decrypted_data = encryption.AESdecrypt(encrypted_data, encryption_key);
             return decrypted_data;
         }
     }

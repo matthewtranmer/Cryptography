@@ -1,8 +1,9 @@
 using System;
 using System.Numerics;
 using System.Globalization;
+using System.Security.Cryptography;
 
-namespace Cryptography.EllipticCurveCryptography
+namespace Cryptography.Generic
 {
     public class ECC
     {
@@ -14,15 +15,12 @@ namespace Cryptography.EllipticCurveCryptography
             Curve = curve;
         }
 
-        //Generates positive big integer between and including min and max
-        //NOT FOR PRODUCTION - TESTING ONLY
         static public BigInteger randomBigInteger(BigInteger min, BigInteger max)
         {
             int length = Convert.ToInt32(BigInteger.Log10(max) + 1);
             byte[] buffer = new byte[length];
 
-            Random random = new Random();
-            random.NextBytes(buffer);
+            RandomNumberGenerator.Fill(buffer);
 
             BigInteger number = new BigInteger(buffer, true);
             number = (number + 1) % (max - min + 1) + min;

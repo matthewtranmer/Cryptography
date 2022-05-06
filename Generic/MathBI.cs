@@ -1,7 +1,7 @@
 ﻿using System.Numerics;
 using System;
 
-namespace Cryptography
+namespace Cryptography.Generic
 {
     public static class MathBI
     {
