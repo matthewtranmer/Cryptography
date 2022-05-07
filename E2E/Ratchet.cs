@@ -4,11 +4,11 @@ namespace Cryptography.E2E
 {
 	public class Ratchet
 	{
-		string root_key;
+		string chain_key;
 
 		public Ratchet(string root_key)
         {
-			this.root_key = root_key;
+			chain_key = root_key;
         }
 
 		public string next(string input)
@@ -21,11 +21,11 @@ namespace Cryptography.E2E
             }
 
 			//hash appended values to protect against length extention attacks
-			string hash = Hash.generateHash(input + root_key);
+			string hash = Hash.generateHash(input + chain_key);
 			hash = Hash.generateHash(hash + opad);
 
 			//first hash value is used as the new root key
-			root_key = hash;
+			chain_key = hash;
 			//second hash value is used as the message key
 			return Hash.generateHash(hash);
         }
