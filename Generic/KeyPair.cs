@@ -2,31 +2,32 @@
 
 namespace Cryptography.Generic
 {
-    public class KeyPair : ECPoint
+    public class KeyPair
     {
-        private BigInteger private_key;
-        private Curves used_curve;
-        public Curves curve { get { return used_curve; } }
+        public BigInteger private_component { get; }
+        public Coordinate public_component { get; }
+        public string public_component_string { get; }
 
-        public BigInteger private_component { get { return private_key; } }
-        public Coordinate public_component { get { return getCoords(); } }
+        private ECPoint curve_point;
 
-        public string public_component_string { get { return ECC.coordinateToString(getCoords()); } }
-
-        public KeyPair(Curves curve) : base(curve)
+        public KeyPair(Curves curve)
         {
-            used_curve = curve;
-            private_key = ECC.randomBigInteger(1, order - 1);
+            curve_point = new ECPoint(curve);
+            private_component = ECC.randomBigInteger(1, curve_point.getOrder() - 1);
 
-            multiply(private_component);
+            curve_point.multiply(private_component);
+            public_component = curve_point.getCoords();
+            public_component_string = ECC.coordinateToString(public_component);
         }
 
-        public KeyPair(Curves curve, BigInteger private_key) : base(curve)
+        public KeyPair(Curves curve, BigInteger private_component)
         {
-            used_curve = curve;
-            this.private_key = private_key;
+            this.private_component = private_component;
+            curve_point = new ECPoint(curve);
 
-            multiply(private_component);
+            curve_point.multiply(private_component);
+            public_component=curve_point.getCoords();
+            public_component_string= ECC.coordinateToString(public_component);
         }
     }
 }

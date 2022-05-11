@@ -132,7 +132,7 @@ namespace Cryptography.Generic
         {
             KeyPair key_pair = new KeyPair(curve, private_key);
 
-            BigInteger order = key_pair.getOrder();
+            BigInteger order = ECPoint.pre_defined_curves[curve].order;
             string hash = Hash.generateHash(data);
             BigInteger int_hash = convertHash(hash, order);
 
