@@ -33,6 +33,12 @@ namespace Cryptography.Generic
             return Hash.generateHash(data).Substring(0, key_length);
         }
 
+        public string ECDH(BigInteger private_component, string public_component, int key_length = 32)
+        {
+            Coordinate coord = stringToCoordinate(public_component);
+            return ECDH(private_component, coord, key_length);
+        }
+
         //Generate a shared secret with a private component and a public elliptic curve point
         public string ECDH(BigInteger private_component, Coordinate public_component, int key_length = 32)
         {
